@@ -41,6 +41,17 @@ class TestCheckWinner(unittest.TestCase):
                      ]
         self.assertEqual(game.check_winner(), False)
 
+class TestChangePlayer(unittest.TestCase):
+    def testChange(self):
+        game = TicTacGame()
+        game.currentPlayer = "X"
+        game.playerName1 = "X"
+        game.playerName2 = "O"
+        game._change_player()
+        self.assertEqual(game.currentPlayer, "O")
+        game._change_player()
+        self.assertEqual(game.currentPlayer, "X")
+
 
 if __name__ == '__main__':
     unittest.main()
