@@ -369,7 +369,5 @@ if __name__ == '__main__':
     game = TicTacGame()
     try:
         game.show_menu()
-    except KeyboardInterrupt:
-        game.exit()
-    except EOFError:
+    except (KeyboardInterrupt, EOFError):
         game.exit()
