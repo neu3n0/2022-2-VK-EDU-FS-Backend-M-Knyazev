@@ -1,17 +1,25 @@
+"""a"""
 import unittest
 from tic_tac_game import TicTacGame
 
+
 class TestValidNum(unittest.TestCase):
-    def testType(self):
+    """a"""
+    def test_type(self):
+        """a"""
         game = TicTacGame()
         self.assertEqual(type(game.validate_num("4")), type(4))
-    
-    def testValue(self):
+
+    def test_value(self):
+        """a"""
         game = TicTacGame()
         self.assertEqual(game.validate_num("4"), 4)
 
+
 class TestCheckWinner(unittest.TestCase):
-    def testWin(self):
+    """a"""
+    def test_win(self):
+        """a"""
         game = TicTacGame()
         for i in range(3):
             for j in range(3):
@@ -31,18 +39,21 @@ class TestCheckWinner(unittest.TestCase):
             game.board[i] = "O"
         self.assertEqual(game.check_winner(), True)
         game._reset()
-    
 
-    def testNotWin(self):
+    def test_not_win(self):
+        """a"""
         game = TicTacGame()
-        game.board = ["X", "O", "X", 
-                      "O", "X", "O", 
+        game.board = ["X", "O", "X",
+                      "O", "X", "O",
                       "O", "X", "O"
                      ]
         self.assertEqual(game.check_winner(), False)
 
+
 class TestChangePlayer(unittest.TestCase):
-    def testChange(self):
+    """a"""
+    def test_change(self):
+        """a"""
         game = TicTacGame()
         game.currentPlayer = "X"
         game.playerName1 = "X"
