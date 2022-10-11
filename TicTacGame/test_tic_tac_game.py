@@ -1,5 +1,5 @@
 import unittest
-from homework_1 import TicTacGame
+from tic_tac_game import TicTacGame
 
 class TestValidNum(unittest.TestCase):
     def testType(self):
