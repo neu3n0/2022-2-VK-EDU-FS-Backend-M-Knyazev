@@ -12,10 +12,15 @@ def create_user(request):
 
 
 @require_GET
-def show_users(request):
+def get_contacts(request):
     names = []
     ids = []
     # for i in User.objects.all():
     #     names.append(i.name)
     #     ids.append(i.pk)
     return JsonResponse({'users': names, 'pk': ids})
+
+
+@require_GET
+def get_profile(request):
+    pass

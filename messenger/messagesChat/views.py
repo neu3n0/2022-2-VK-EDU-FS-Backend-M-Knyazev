@@ -26,8 +26,19 @@ def get_message_info(request, pk):
                         'is_readed': message.is_readed, 'pub_date': message.pub_date})
     return resp
 
+
 @require_GET
-def get_messages_from_chat(request, chat_index):
+def get_messages_from_chat(request, chat_index, user_index):
     chat = get_object_or_404(Chat, pk=chat_index)
+
     messages = Message.objects.filter(chat_id=chat_index)
     messages.order_by('-pub_date')
+
+
+@require_POST
+def edit_message(request, pk):
+    pass
+
+
+def remove_message(request, pk):
+    pass
