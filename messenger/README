@@ -1,30 +1,14 @@
 Models:
 
-UserProfile:
--username
--age
--mobile
--email
--description
-
 User:
--profile // OneToOne(UserProfile)
--contacts - пока хз как реализовать это, но видимо ManyToMany на самого себя)
-
-ChatProfile:
--chat_name
--description
--count_users
+-contacts // ManyToMany('User')
+---
 
 Chat:
--chat_profile
--type
 -creator //ForeignKey(User)
 -members //ManyToMany(User)
+---
 
 Message:
 -chat //ForeignKey(Chat)
 -author //ForeignKey(User)
--content
--pub_date
--is_readed
