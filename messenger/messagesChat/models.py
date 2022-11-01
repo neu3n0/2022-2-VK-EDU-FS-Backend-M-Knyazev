@@ -9,3 +9,6 @@ class Message(models.Model):
     content = models.TextField(null=False, blank=False)
     pub_date = models.DateTimeField(auto_now_add=True)
     is_readed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['pub_date']
