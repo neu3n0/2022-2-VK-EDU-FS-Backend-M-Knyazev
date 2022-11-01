@@ -14,7 +14,7 @@ class Chat(models.Model):
     )
     creator = models.ForeignKey(
         User, null=True, related_name='creator_chats', on_delete=models.SET_NULL)
-    members = models.ManyToManyField(User, default=creator)
+    members = models.ManyToManyField(User, default=creator, related_name='chats')
     title = models.CharField(max_length=150, null=False, blank=False, default='chat_name')
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False)

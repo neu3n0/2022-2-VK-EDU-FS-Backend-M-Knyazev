@@ -39,15 +39,21 @@ def get_chat_description(request, pk):
 
 @require_GET
 def chat_list(request, user_id):
-    pass
+    user = get_object_or_404(User, pk=user_id)
+    chats = user.chats.all()
+    chats_arr = []
+    for chat in chats:
+        chats_arr.append({'id': chat.pk, 'title': chat.title})
+    resp = JsonResponse({'chats': chats_arr})
+    return resp
 
 
 @require_POST
 def edit_chat(request, pk):
     chat = get_object_or_404(Chat, pk=pk)
-    chat.title=request.POST['title']
-    chat.description=request.POST['description']
-    chat.category=request.POST['category']
+    chat.title = request.POST['title']
+    chat.description = request.POST['description']
+    chat.category = request.POST['category']
     chat.save()
     resp = JsonResponse({
         'title': chat.title,
