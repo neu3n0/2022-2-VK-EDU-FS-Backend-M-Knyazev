@@ -1,5 +1,4 @@
 import json
-from unicodedata import category
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from .models import Chat
@@ -11,6 +10,8 @@ from django.shortcuts import get_object_or_404
 @require_POST
 def create_chat(request, user_id):
     user = get_object_or_404(User, pk=user_id)
+    if (not request.POST.get('title') and not request.POST.get('category')):
+        return JsonResponse({'bad_input': True})
     chat = Chat.objects.create(title=request.POST['title'], creator=user,
                                description=request.POST['description'], category=request.POST['category'])
     resp = JsonResponse({
@@ -51,9 +52,12 @@ def chat_list(request, user_id):
 @require_POST
 def edit_chat(request, pk):
     chat = get_object_or_404(Chat, pk=pk)
-    chat.title = request.POST['title']
-    chat.description = request.POST['description']
-    chat.category = request.POST['category']
+    if (request.POST.get('title')):
+        chat.title = request.POST['title']
+    if (request.POST.get('description')):
+        chat.description = request.POST['description']
+    if (request.POST.get('category')):
+        chat.category = request.POST['category']
     chat.save()
     resp = JsonResponse({
         'title': chat.title,

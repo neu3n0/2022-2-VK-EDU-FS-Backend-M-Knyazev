@@ -10,6 +10,8 @@ from users.models import User
 def create_message(request, user_id: int, chat_id: int):
     author = get_object_or_404(User, pk=user_id)
     chat = get_object_or_404(Chat, pk=chat_id)
+    if (not request.POST.get('content')):
+        return JsonResponse({'bad_input': True})
     message = Message.objects.create(
         chat=chat, author=author, content=request.POST['content'])
 
@@ -52,7 +54,8 @@ def get_messages_from_chat(request, chat_pk):
 @require_POST
 def edit_message(request, pk):
     message = get_object_or_404(Message, pk=pk)
-    message.content = request.POST['content']
+    if (request.POST.get('content')):
+        message.content = request.POST['content']
     message.save()
     resp = JsonResponse({
         'id': message.id,
