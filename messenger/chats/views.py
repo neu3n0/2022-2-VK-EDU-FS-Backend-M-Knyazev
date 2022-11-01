@@ -1,75 +1,77 @@
+import json
+from unicodedata import category
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
-from .models import Chat, ChatProfile
+from .models import Chat
 from users.models import User
 from messagesChat.models import Message
 from django.shortcuts import get_object_or_404
 
 
-# def processing_chat(chat_id):
-#     try:
-#         chat = Chat.objects.get(id=chat_id)
-#     except Chat.DoesNotExist:
-#         chat = None
-#     return chat
-
-
 @require_POST
-def create_chat(request):
-    # берем автора и остальную инфу из request.POST?
-    creator = request.POST['chat_creator']
-    title = request.POST['chat_title']
-    desciption = request.POST['chat_description']
-    category = request.POST['chat_category']
-    profile = ChatProfile.objects.create(title=title, desciption=desciption)
-    Chat.objects.create(creator=creator, profile=profile, category=category)
-    # что вернуть?
-    resp = JsonResponse({'?': '???'})
+def create_chat(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    chat = Chat.objects.create(title=request.POST['title'], creator=user,
+                               description=request.POST['description'], category=request.POST['category'])
+    resp = JsonResponse({
+        'title': chat.title,
+        'creator_username': chat.creator.username,
+        'description': chat.description,
+        'created_at': chat.created_at,
+        'category': chat.category,
+    })
     return resp
 
 
 @require_GET
 def get_chat_description(request, pk):
-    chat = get_object_or_404(Chat, pk)
-    description = chat.profile.description
-    resp = JsonResponse({'description': description})
+    chat = get_object_or_404(Chat, pk=pk)
+    resp = JsonResponse({
+        'title': chat.title,
+        'description': chat.description,
+        'category': chat.category,
+        'created_at': chat.created_at,
+        'creator_name': chat.creator.username,
+        'creator_id': chat.creator.id,
+    })
     return resp
 
 
 @require_GET
 def chat_list(request, user_id):
-    user = get_object_or_404(User, user_id)
-    # for chat in user.
+    pass
 
 
 @require_POST
 def edit_chat(request, pk):
-    chat = get_object_or_404(Chat, pk)
-    # Тут что-то с POST запросом надо придумать?
-    # меняем объект
+    chat = get_object_or_404(Chat, pk=pk)
+    chat.title=request.POST['title']
+    chat.description=request.POST['description']
+    chat.category=request.POST['category']
     chat.save()
-    # что вернуть, типо id чата и какую-то инфу про него,
-    # чтобы на фронте отрисовать что-то по этим данным,
-    # напрмиер успешно редактирован {название чата}?
-    resp = JsonResponse({'chat_title': chat.profile.title})
+    resp = JsonResponse({
+        'title': chat.title,
+        'description': chat.description,
+        'category': chat.category,
+    })
     return resp
 
 
 @require_POST
 def remove_chat(request, pk):
-    chat = get_object_or_404(Chat, pk)
-    title = chat.profile.title
-    count = chat.profile.counts_users
+    chat = get_object_or_404(Chat, pk=pk)
     chat.delete()
-    # аналагично edit_chat вернуть?
-    resp = JsonResponse({'chat_title': title, 'count_users': count})
+    resp = JsonResponse({'removed': True})
     return resp
 
 
 @require_GET
 def show_chat(request, pk):
-    chat = get_object_or_404(Chat, pk)
+    chat = get_object_or_404(Chat, pk=pk)
     messages = Message.objects.filter(chat_id=pk)
     messages.order_by('-pub_date')
-    messages = messages[0:20]
-    return JsonResponse({'messages': messages})
+    messages_ar = []
+    for mess in messages:
+        messages_ar.append({'author': mess.author.username, 'text': mess.content,
+                           'date': mess.pub_date, 'readed': mess.is_readed})
+    return JsonResponse({'messages': messages_ar})

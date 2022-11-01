@@ -1,44 +1,72 @@
+from email import message
 import imp
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.shortcuts import get_object_or_404
 from messagesChat.models import Message
 from chats.models import Chat
+from users.models import User
 
 
 @require_POST
-def create_message(request, sender_id: int, chat_id: int, message_text: str):
-    # creator = request.POST['chat_creator']
-    # title = request.POST['chat_title']
-    # desciption = request.POST['chat_description']
-    # category = request.POST['chat_category']
-    # profile = ChatProfile.objects.create(title=title, desciption=desciption)
-    # Chat.objects.create(creator=creator, profile=profile, category=category)
-    # # что вернуть?
-    resp = JsonResponse({'?': '???'})
+def create_message(request, user_id: int, chat_id: int):
+    author = get_object_or_404(User, pk=user_id)
+    chat = get_object_or_404(Chat, pk=chat_id)
+    message = Message.objects.create(
+        chat=chat, author=author, content=request.POST['content'])
+
+    resp = JsonResponse({
+        'author_username': message.author.username,
+        'author_id': message.author.id,
+        'chat_id': chat.id,
+        'content': message.content,
+        'pub_date': message.pub_date,
+        'is_readed': message.is_readed,
+    })
     return resp
 
 
 @require_GET
 def get_message_info(request, pk):
-    message = get_object_or_404(Message, pk)
-    resp = JsonResponse({'author': message.author, 'message': message.content,
-                        'is_readed': message.is_readed, 'pub_date': message.pub_date})
+    message = get_object_or_404(Message, pk=pk)
+    resp = JsonResponse({
+        'author_username': message.author.username,
+        'message': message.content,
+        'is_readed': message.is_readed,
+        'pub_date': message.pub_date,
+        'chat_id': message.chat.id
+    })
     return resp
 
 
 @require_GET
-def get_messages_from_chat(request, chat_index, user_index):
-    chat = get_object_or_404(Chat, pk=chat_index)
-
-    messages = Message.objects.filter(chat_id=chat_index)
+def get_messages_from_chat(request, chat_pk):
+    messages = Message.objects.filter(chat_id=chat_pk)
+    messages = messages.filter(author_id=request.GET['user'])
     messages.order_by('-pub_date')
+    messages_ar = []
+    for mess in messages:
+        messages_ar.append({'text': mess.content,
+                           'date': mess.pub_date, 'readed': mess.is_readed})
+    return JsonResponse({'messages': messages_ar})
 
 
 @require_POST
 def edit_message(request, pk):
-    pass
+    message = get_object_or_404(Message, pk=pk)
+    message.content = request.POST['content']
+    message.save()
+    resp = JsonResponse({
+        'id': message.id,
+        'author': message.author,
+        'content': message.content,
+    })
+    return resp
 
 
+@require_POST
 def remove_message(request, pk):
-    pass
+    message = get_object_or_404(Message, pk=pk)
+    message.delete()
+    resp = JsonResponse({'removed_message': True})
+    return resp
