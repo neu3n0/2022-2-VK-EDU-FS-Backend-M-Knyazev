@@ -20,3 +20,15 @@ def create_user(request):
         'description': user.description,
     })
     return resp
+
+@require_GET
+def get_user_info(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    resp = JsonResponse({
+        'username': user.username,
+        'id': user.pk,
+        'age': user.age,
+        'mobile': user.mobile,
+        'description': user.description,
+    })
+    return resp

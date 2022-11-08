@@ -89,3 +89,30 @@ def show_chat(request, pk):
         messages_ar.append({'author': mess.author.username, 'text': mess.content,
                            'date': mess.pub_date, 'readed': mess.is_readed})
     return JsonResponse({'messages': messages_ar})
+
+@require_POST
+def add_user_to_chat(request, chat_id, user_id):
+    chat = get_object_or_404(Chat, pk=chat_id)
+    user = get_object_or_404(User, pk=user_id)
+    if chat.members.filter(pk=user.pk).exists():
+        return JsonResponse({'exits': True})
+    chat.members.add(user)
+    resp = JsonResponse({
+        'username': user.username,
+        'chat': chat.title,
+    })
+    return resp
+
+def remove_user_to_chat(request, chat_id, user_id):
+    chat = get_object_or_404(Chat, pk=chat_id)
+    user = get_object_or_404(User, pk=user_id)
+    if request.method != "DELETE":
+        return JsonResponse({'removed_user': False})
+    if not chat.members.filter(pk=user.pk).exists():
+        return JsonResponse({'exits': False})
+    chat.members.remove(user)
+    resp = JsonResponse({
+        'username': user.username,
+        'chat': chat.title,
+    })
+    return resp

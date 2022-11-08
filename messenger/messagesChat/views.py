@@ -75,3 +75,15 @@ def remove_message(request, pk):
     message.delete()
     resp = JsonResponse({'removed_message': True})
     return resp
+
+@require_POST
+def edit_message(request, pk):
+    message = get_object_or_404(Message, pk=pk)
+    message.is_readed = True
+    message.save()
+    resp = JsonResponse({
+        'id': message.id,
+        'content': message.content,
+        'is_readed': message.is_readed,
+    })
+    return resp
