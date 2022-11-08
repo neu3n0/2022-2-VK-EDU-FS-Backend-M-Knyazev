@@ -13,9 +13,9 @@ def create_chat(request, user_id):
     if (not request.POST.get('title') and not request.POST.get('category')):
         return JsonResponse({'bad_input': True})
     chat = Chat.objects.create(title=request.POST['title'], creator=user)
-    if request.POST['description']:
+    if request.POST.get('description'):
         chat.description = request.POST['description']
-    if request.POST['category'] and request.POST['category'] in ('G', 'B', 'D'):
+    if request.POST.get('category') and request.POST['category'] in ('G', 'B', 'D'):
         chat.category = request.POST['category']
     resp = JsonResponse({
         'title': chat.title,

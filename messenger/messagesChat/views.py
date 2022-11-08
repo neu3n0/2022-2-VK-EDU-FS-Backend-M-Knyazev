@@ -42,6 +42,10 @@ def get_message_info(request, pk):
 @require_GET
 def get_messages_from_chat(request, chat_pk):
     messages = Message.objects.filter(chat_id=chat_pk)
+    if not messages.exists():
+        return JsonResponse({'exist chat': False})
+    if not request.GET.get('user'):
+        return JsonResponse({'messages': []})
     messages = messages.filter(author_id=request.GET['user'])
     messages_ar = []
     for mess in messages:
