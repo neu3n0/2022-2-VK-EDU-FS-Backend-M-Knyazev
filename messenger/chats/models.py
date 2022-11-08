@@ -13,10 +13,14 @@ class Chat(models.Model):
         (DIALOG, 'Correspondence 1 on 1'),
     )
     creator = models.ForeignKey(
-        User, null=True, related_name='creator_chats', on_delete=models.SET_NULL)
-    members = models.ManyToManyField(User, default=creator, related_name='chats')
-    title = models.CharField(max_length=150, null=False, blank=False, default='chat_name')
-    description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False)
+        User, null=True, related_name='creator_chats', on_delete=models.SET_NULL, verbose_name='Создатель чата')
+    members = models.ManyToManyField(User, default=creator, related_name='chats', verbose_name='Участники')
+    title = models.CharField(max_length=150, null=False, blank=False, default='chat_name', verbose_name='Название')
+    description = models.TextField(verbose_name='Описание')
+    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False, verbose_name='Дата создания')
     category = models.CharField(
-        max_length=1, choices=CHAT_TYPE, null=False, blank=False, default=DIALOG)
+        max_length=1, choices=CHAT_TYPE, null=False, blank=False, default=DIALOG, verbose_name='Категория')
+
+    class Meta:
+        verbose_name='Чат'
+        verbose_name_plural='Чаты'

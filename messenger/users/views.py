@@ -10,7 +10,9 @@ from .models import User
 def create_user(request):
     if (not request.POST.get('username') and not request.POST.get('mobile')):
         return JsonResponse({'bad_input': True})
-    user = User.objects.create(username=request.POST['username'], age=request.POST.get('age'), mobile=request.POST['mobile'], description=request.POST['description'])
+    user = User.objects.create(username=request.POST['username'], mobile=request.POST['mobile'], description=request.POST['description'])
+    if request.POST.get('age'):
+        user.age = request.POST.get('age')
     resp = JsonResponse({
         'username': user.username,
         'age': user.age,

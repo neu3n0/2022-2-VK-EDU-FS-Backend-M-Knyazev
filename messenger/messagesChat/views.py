@@ -43,7 +43,6 @@ def get_message_info(request, pk):
 def get_messages_from_chat(request, chat_pk):
     messages = Message.objects.filter(chat_id=chat_pk)
     messages = messages.filter(author_id=request.GET['user'])
-    messages.order_by('-pub_date')
     messages_ar = []
     for mess in messages:
         messages_ar.append({'text': mess.content,
@@ -65,8 +64,9 @@ def edit_message(request, pk):
     return resp
 
 
-@require_POST
 def remove_message(request, pk):
+    if request.method != "DELETE":
+        return JsonResponse({'removed_message': False})
     message = get_object_or_404(Message, pk=pk)
     message.delete()
     resp = JsonResponse({'removed_message': True})

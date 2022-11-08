@@ -12,8 +12,11 @@ def create_chat(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if (not request.POST.get('title') and not request.POST.get('category')):
         return JsonResponse({'bad_input': True})
-    chat = Chat.objects.create(title=request.POST['title'], creator=user,
-                               description=request.POST['description'], category=request.POST['category'])
+    chat = Chat.objects.create(title=request.POST['title'], creator=user)
+    if request.POST['description']:
+        chat.description = request.POST['description']
+    if request.POST['category'] and request.POST['category'] in ('G', 'B', 'D'):
+        chat.category = request.POST['category']
     resp = JsonResponse({
         'title': chat.title,
         'creator_username': chat.creator.username,
@@ -52,11 +55,11 @@ def chat_list(request, user_id):
 @require_POST
 def edit_chat(request, pk):
     chat = get_object_or_404(Chat, pk=pk)
-    if (request.POST.get('title')):
+    if request.POST.get('title'):
         chat.title = request.POST['title']
-    if (request.POST.get('description')):
+    if request.POST.get('description'):
         chat.description = request.POST['description']
-    if (request.POST.get('category')):
+    if request.POST.get('category') and request.POST['category'] in ('G', 'B', 'D'):
         chat.category = request.POST['category']
     chat.save()
     resp = JsonResponse({
@@ -67,8 +70,9 @@ def edit_chat(request, pk):
     return resp
 
 
-@require_POST
 def remove_chat(request, pk):
+    if request.method != "DELETE":
+        return JsonResponse({'removed': False})
     chat = get_object_or_404(Chat, pk=pk)
     chat.delete()
     resp = JsonResponse({'removed': True})
