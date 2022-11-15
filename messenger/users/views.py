@@ -9,26 +9,36 @@ from .models import User
 @require_POST
 def create_user(request):
     if (not request.POST.get('username') and not request.POST.get('mobile')):
-        return JsonResponse({'bad_input': True})
-    user = User.objects.create(username=request.POST['username'], mobile=request.POST['mobile'], description=request.POST['description'])
-    if request.POST.get('age') and request.POST.get('age') > 7 and request.POST.get('age') < 120:
+        return JsonResponse(
+            {
+                'error': 'username and mobile are necessary',
+                'username': request.POST.get('username'),
+                'mobile': request.POST.get('mobile')
+            },
+            status=400
+        )
+    user = User.objects.create(
+        username=request.POST['username'],
+        mobile=request.POST['mobile'],
+        description=request.POST.get('description')
+    )
+    if request.POST.get('age') and request.POST.get('age') in range(7, 120):
         user.age = request.POST.get('age')
-    resp = JsonResponse({
+    return JsonResponse({
         'username': user.username,
         'age': user.age,
         'mobile': user.mobile,
         'description': user.description,
     })
-    return resp
+
 
 @require_GET
 def get_user_info(request, pk):
     user = get_object_or_404(User, pk=pk)
-    resp = JsonResponse({
+    return JsonResponse({
         'username': user.username,
         'id': user.pk,
         'age': user.age,
         'mobile': user.mobile,
         'description': user.description,
     })
-    return resp

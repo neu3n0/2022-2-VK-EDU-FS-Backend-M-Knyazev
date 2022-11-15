@@ -1,14 +1,105 @@
 Models:
 
-User:
--contacts // ManyToMany('User')
+User(AbstractUser):
+-age
+-mobile
+-description
+---
+
+ChatMembers:
+-chat_id //ForeignKey(Chat)
+-user_id //ForeignKey(User)
+-added_at
+-added_by_user //ForeignKey(User) (!)
 ---
 
 Chat:
 -creator //ForeignKey(User)
--members //ManyToMany(User)
+-title
+-desription
+-created_at
+-category
+-shared_links (! ???)
+-media (! ???)
+-files (! ???)
 ---
 
 Message:
 -chat //ForeignKey(Chat)
 -author //ForeignKey(User)
+-text
+-pub_date
+-is_readed
+-media (!)
+-files (!)
+
+
+
+
+
+
+
+
+Чаты:
+
+1 вариант:
+Chat:
+-creator //ForeignKey(User)
+-members // ManyToMany(User)
+-title
+-desription
+-created_at
+-category
+
+Минусы: 1) неявное создание промежуточной таблицы, 2) тяжело расширять функциональность (например поле когда человек был добавлен в этот чат)
+
+2 вариант:
+ChatMembers:
+-chat_id //ForeignKey(Chat)
+-user_id //ForeignKey(User)
+-added_at
+-added_by_user //ForeignKey(User) (!)
+
+Chat:
+-creator //ForeignKey(User)
+-title
+-desription
+-created_at
+-category
+
+Избавились от минусов 1 варианта, но возможно хотелось бы еще разделять чат на разные классы (диалог, блог, групповой чат). Сейчас это можно сделать все в одном классе, но тогда будет много None полей
+
+3 вариант:
+ChatMembers:
+-chat_id //ForeignKey(Chat)
+-user_id //ForeignKey(User)
+-added_at
+-added_by_user //ForeignKey(User) (!)
+
+Chat:
+-title
+-created_at
+-category
+
+Dialog:
+-chat_id //ForeignKey(Chat)
+-member_one //ForeignKey(User)
+-member_two //ForeignKey(User)
+...
+(member поля как бы необязательные, но хочется как-то логически разбить, мб так быстрее запросы будут обрабатываться)
+
+
+GroupChat:
+-chat_id //ForeignKey(Chat)
+-chat_admin //ForeignKey(User)
+-desription
+...
+
+4 вариант:
+отдельные сущности на каждый тип чата, это мне не очень нравится. Хотелось бы иметь прослойку в виде общего класса Chat, чтобы в сообщении был FK на этот чат.
+
+
+2 или 3 вариант?
+
+
+Общие замечания: В основном работа будет осуществляться с сообщениями, поэтому наиболее узкое место - это сообщения и надо там делать максимально оптимальные запросы.

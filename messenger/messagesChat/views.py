@@ -1,5 +1,5 @@
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET, require_POST
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.shortcuts import get_object_or_404
 from messagesChat.models import Message
 from chats.models import Chat
@@ -7,45 +7,52 @@ from users.models import User
 
 
 @require_POST
-def create_message(request, user_id: int, chat_id: int):
+def create_message(request, user_id, chat_id):
     author = get_object_or_404(User, pk=user_id)
     chat = get_object_or_404(Chat, pk=chat_id)
     if (not request.POST.get('content')):
-        return JsonResponse({'bad_input': True})
+        return JsonResponse(
+            {
+                'error': 'no input',
+                'content': request.POST.get('content')
+            },
+            status=400
+        )
     message = Message.objects.create(
         chat=chat, author=author, content=request.POST['content'])
-
-    resp = JsonResponse({
+    return JsonResponse({
         'author_username': message.author.username,
-        'author_id': message.author.id,
-        'chat_id': chat.id,
+        'chat_title': chat.title,
         'content': message.content,
         'pub_date': message.pub_date,
         'is_readed': message.is_readed,
     })
-    return resp
 
 
 @require_GET
 def get_message_info(request, pk):
     message = get_object_or_404(Message, pk=pk)
-    resp = JsonResponse({
+    return JsonResponse({
         'author_username': message.author.username,
         'message': message.content,
         'is_readed': message.is_readed,
         'pub_date': message.pub_date,
         'chat_id': message.chat.id
     })
-    return resp
 
 
 @require_GET
 def get_messages_from_chat(request, chat_pk):
+    get_object_or_404(Chat, chat_pk)
     messages = Message.objects.filter(chat_id=chat_pk)
-    if not messages.exists():
-        return JsonResponse({'exist chat': False})
     if not request.GET.get('user'):
-        return JsonResponse({'messages': []})
+        return JsonResponse(
+            {
+                'error': 'bad input, user_id is necessary',
+                'messages': []
+            },
+            status=400,
+        )
     messages = messages.filter(author_id=request.GET['user'])
     messages_ar = []
     for mess in messages:
@@ -68,16 +75,15 @@ def edit_message(request, pk):
     return resp
 
 
+@require_http_methods(["DELETE"])
 def remove_message(request, pk):
-    if request.method != "DELETE":
-        return JsonResponse({'removed_message': False})
     message = get_object_or_404(Message, pk=pk)
     message.delete()
-    resp = JsonResponse({'removed_message': True})
-    return resp
+    return HttpResponse()
+
 
 @require_POST
-def edit_message(request, pk):
+def is_readed(request, pk):
     message = get_object_or_404(Message, pk=pk)
     message.is_readed = True
     message.save()

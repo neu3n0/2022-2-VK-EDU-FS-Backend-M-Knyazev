@@ -3,5 +3,5 @@ from .models import Message
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'author', 'content', 'pub_date', 'is_readed', 'chat')
+    list_display = ('pk', 'author', 'text', 'pub_date', 'is_readed', 'chat')
     model = Message

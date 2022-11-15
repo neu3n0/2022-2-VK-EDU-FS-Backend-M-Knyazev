@@ -1,118 +1,137 @@
 import json
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET, require_POST
-from .models import Chat
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from .models import Chat, ChatMember
 from users.models import User
 from messagesChat.models import Message
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 @require_POST
 def create_chat(request, user_id):
     user = get_object_or_404(User, pk=user_id)
-    if (not request.POST.get('title') and not request.POST.get('category')):
-        return JsonResponse({'bad_input': True})
-    chat = Chat.objects.create(title=request.POST['title'], creator=user)
+    if (not request.POST.get('title') or
+        not (request.POST.get('category') and
+             request.POST.get('category') in ('G', 'B', 'D'))):
+        return JsonResponse(
+            {
+                'error': 'title and category are necessary',
+                'title': request.POST.get('title'),
+                'category': request.POST.get('category')
+            },
+            status=400
+        )
+    chat = Chat.objects.create(
+        title=request.POST['title'], category=request.POST['category'])
     if request.POST.get('description'):
         chat.description = request.POST['description']
-    if request.POST.get('category') and request.POST['category'] in ('G', 'B', 'D'):
-        chat.category = request.POST['category']
-    resp = JsonResponse({
+    if chat.category in ('G', 'B'):
+        chat.chat_admin = user
+    return JsonResponse({
         'title': chat.title,
-        'creator_username': chat.creator.username,
+        'category': chat.category,
         'description': chat.description,
         'created_at': chat.created_at,
-        'category': chat.category,
+        'admin_username': chat.chat_admin.username if chat.chat_admin else None,
+        'admin_id': chat.chat_admin.pk if chat.chat_admin else None,
     })
-    return resp
 
 
 @require_GET
 def get_chat_description(request, pk):
     chat = get_object_or_404(Chat, pk=pk)
-    resp = JsonResponse({
+    return JsonResponse({
         'title': chat.title,
-        'description': chat.description,
         'category': chat.category,
+        'description': chat.description,
         'created_at': chat.created_at,
-        'creator_name': chat.creator.username,
-        'creator_id': chat.creator.id,
+        'admin_username': chat.chat_admin.username if chat.chat_admin else None,
+        'admin_id': chat.chat_admin.pk if chat.chat_admin else None,
     })
-    return resp
 
 
 @require_GET
 def chat_list(request, user_id):
     user = get_object_or_404(User, pk=user_id)
-    chats = user.chats.all()
-    chats_arr = []
-    for chat in chats:
-        chats_arr.append({'id': chat.pk, 'title': chat.title})
-    resp = JsonResponse({'chats': chats_arr})
-    return resp
+    chat_members = user.user_members.all()
+    chats = []
+    for chat in chat_members:
+        chats.append({'id': chat.chat.id, 'title': chat.chat.title})
+    return JsonResponse({'chats': chats})
 
 
 @require_POST
 def edit_chat(request, pk):
-    chat = get_object_or_404(Chat, pk=pk)
-    if request.POST.get('title'):
-        chat.title = request.POST['title']
-    if request.POST.get('description'):
-        chat.description = request.POST['description']
-    if request.POST.get('category') and request.POST['category'] in ('G', 'B', 'D'):
-        chat.category = request.POST['category']
-    chat.save()
-    resp = JsonResponse({
-        'title': chat.title,
-        'description': chat.description,
-        'category': chat.category,
+    get_object_or_404(Chat, pk=pk)
+    chat = Chat.objects.filter(pk=pk)
+    chat_title = request.POST['title'] if request.POST.get(
+        'title') else chat.first().title
+    chat_description = request.POST['description'] if request.POST.get(
+        'description') else chat.first().description
+    chat_category = request.POST['category'] if request.POST.get(
+        'category') else chat.first().category
+    chat.update(
+        title=chat_title,
+        description=chat_description,
+        category=chat_category,
+    )
+    return JsonResponse({
+        'title': chat_title,
+        'description': chat_description,
+        'category': chat_category,
     })
-    return resp
 
 
+@require_http_methods(["DELETE"])
 def remove_chat(request, pk):
-    if request.method != "DELETE":
-        return JsonResponse({'removed': False})
     chat = get_object_or_404(Chat, pk=pk)
     chat.delete()
-    resp = JsonResponse({'removed': True})
-    return resp
+    return HttpResponse()
 
 
 @require_GET
 def show_chat(request, pk):
-    chat = get_object_or_404(Chat, pk=pk)
+    get_object_or_404(Chat, pk=pk)
     messages = Message.objects.filter(chat_id=pk)
-    messages.order_by('-pub_date')
     messages_ar = []
     for mess in messages:
-        messages_ar.append({'author': mess.author.username, 'text': mess.content,
-                           'date': mess.pub_date, 'readed': mess.is_readed})
+        messages_ar.append(
+            {
+                'author': mess.author.username,
+                'text': mess.content,
+                'date': mess.pub_date,
+                'readed': mess.is_readed
+            }
+        )
     return JsonResponse({'messages': messages_ar})
+
 
 @require_POST
 def add_user_to_chat(request, chat_id, user_id):
     chat = get_object_or_404(Chat, pk=chat_id)
     user = get_object_or_404(User, pk=user_id)
-    if chat.members.filter(pk=user.pk).exists():
-        return JsonResponse({'exits': True})
-    chat.members.add(user)
-    resp = JsonResponse({
+    if chat.chat_members.filter(user_id=user.pk).exists():
+        return JsonResponse(
+            {
+                'error': 'this user is already in the chat',
+                'username': user.username,
+                'chat': chat.title,
+            },
+            status=400
+        )
+    ChatMember.objects.create(chat=chat, user=user)
+    return JsonResponse({
         'username': user.username,
         'chat': chat.title,
     })
-    return resp
 
+
+@require_http_methods(["DELETE"])
 def remove_user_to_chat(request, chat_id, user_id):
-    chat = get_object_or_404(Chat, pk=chat_id)
-    user = get_object_or_404(User, pk=user_id)
-    if request.method != "DELETE":
-        return JsonResponse({'removed_user': False})
-    if not chat.members.filter(pk=user.pk).exists():
-        return JsonResponse({'exits': False})
-    chat.members.remove(user)
-    resp = JsonResponse({
-        'username': user.username,
-        'chat': chat.title,
+    member = ChatMember.objects.filter(Q(user_id=user_id) & Q(chat_id=chat_id))
+    member.delete()
+    return JsonResponse({
+        'user_id': user_id,
+        'chat_id': chat_id,
     })
-    return resp
