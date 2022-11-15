@@ -1,6 +1,6 @@
 from django.urls import path
 
-from messagesChat.views import create_message, edit_message, get_message_info, get_messages_from_chat, remove_message, is_readed
+from messageschat.views import create_message, edit_message, get_message_info, get_messages_from_chat, remove_message, is_readed
 
 urlpatterns = [
     path('create/<int:user_id>/', create_message, name='create_message'),

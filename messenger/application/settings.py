@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'chats',
     'users',
-    'messagesChat',
+    'messageschat',
 ]
 
 MIDDLEWARE = [

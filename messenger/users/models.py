@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    contacts = models.ManyToManyField('User', verbose_name='Контакты')
+    # contacts = models.ManyToManyField('User', verbose_name='Контакты')
     age = models.IntegerField(
         null=True,
         blank=True,
@@ -15,7 +15,7 @@ class User(AbstractUser):
         unique=True,
         verbose_name='Номер телефона'
     )
-    description = models.TextField(verbose_name='Описание')
+    description = models.TextField(verbose_name='Описание', null=True, blank=True)
 
     def __str__(self) -> str:
         return f'User {self.username}'

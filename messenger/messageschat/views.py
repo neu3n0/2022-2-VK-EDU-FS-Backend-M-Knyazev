@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.shortcuts import get_object_or_404
-from messagesChat.models import Message
+from messageschat.models import Message
 from chats.models import Chat
 from users.models import User
 
