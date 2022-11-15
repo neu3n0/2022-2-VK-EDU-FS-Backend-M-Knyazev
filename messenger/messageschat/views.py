@@ -10,20 +10,20 @@ from users.models import User
 def create_message(request, user_id, chat_id):
     author = get_object_or_404(User, pk=user_id)
     chat = get_object_or_404(Chat, pk=chat_id)
-    if (not request.POST.get('content')):
+    if (not request.POST.get('text')):
         return JsonResponse(
             {
                 'error': 'no input',
-                'content': request.POST.get('content')
+                'text': request.POST.get('text')
             },
             status=400
         )
     message = Message.objects.create(
-        chat=chat, author=author, content=request.POST['content'])
+        chat=chat, author=author, text=request.POST['text'])
     return JsonResponse({
         'author_username': message.author.username,
         'chat_title': chat.title,
-        'content': message.content,
+        'text': message.text,
         'pub_date': message.pub_date,
         'is_readed': message.is_readed,
     })
@@ -34,7 +34,7 @@ def get_message_info(request, pk):
     message = get_object_or_404(Message, pk=pk)
     return JsonResponse({
         'author_username': message.author.username,
-        'message': message.content,
+        'text': message.text,
         'is_readed': message.is_readed,
         'pub_date': message.pub_date,
         'chat_id': message.chat.id
@@ -56,7 +56,7 @@ def get_messages_from_chat(request, chat_pk):
     messages = messages.filter(author_id=request.GET['user'])
     messages_ar = []
     for mess in messages:
-        messages_ar.append({'text': mess.content,
+        messages_ar.append({'text': mess.text,
                            'date': mess.pub_date, 'readed': mess.is_readed})
     return JsonResponse({'messages': messages_ar})
 
@@ -64,15 +64,14 @@ def get_messages_from_chat(request, chat_pk):
 @require_POST
 def edit_message(request, pk):
     message = get_object_or_404(Message, pk=pk)
-    if (request.POST.get('content')):
-        message.content = request.POST['content']
-    message.save()
-    resp = JsonResponse({
+    if (request.POST.get('text')):
+        text_ = request.POST['text']
+    Message.objects.filter(pk=pk).update(text=text_)
+    return JsonResponse({
         'id': message.id,
         'author': message.author,
-        'content': message.content,
+        'text': message.text,
     })
-    return resp
 
 
 @require_http_methods(["DELETE"])
@@ -87,9 +86,8 @@ def is_readed(request, pk):
     message = get_object_or_404(Message, pk=pk)
     message.is_readed = True
     message.save()
-    resp = JsonResponse({
+    return JsonResponse({
         'id': message.id,
-        'content': message.content,
+        'text': message.text,
         'is_readed': message.is_readed,
     })
-    return resp

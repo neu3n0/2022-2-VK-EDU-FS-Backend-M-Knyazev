@@ -99,7 +99,7 @@ def show_chat(request, pk):
         messages_ar.append(
             {
                 'author': mess.author.username,
-                'text': mess.content,
+                'text': mess.text,
                 'date': mess.pub_date,
                 'readed': mess.is_readed
             }
