@@ -35,11 +35,6 @@ Message:
 
 
 
-
-
-
-
-
 Чаты:
 
 1 вариант:
@@ -103,3 +98,115 @@ GroupChat:
 
 
 Общие замечания: В основном работа будет осуществляться с сообщениями, поэтому наиболее узкое место - это сообщения и надо там делать максимально оптимальные запросы.
+
+
+
+
+
+---------------1---------------
+
+Message_Meta_Data:
+-message //ForeignKey(Message)
+-pub_date
+-is_readed
+-count_readers
+
+
+Messsage:
+-id 
+-author //ForeignKey(User)
+-text
+-chat //ForeignKey(Chat)
+
+
+Chat:
+-created_at
+-chat_admin
+-title
+-description
+-category
+
+
+ChatMember:
+-chat_id //ForeignKey(Chat)
+-user_id //ForeignKey(user)
+
+
+User:
+-username
+-first_name
+-last_name
+-email
+-mobile
+-description
+-created_at
+
+
+---------------2---------------
+Message:
+-text
+-pub_date
+-is_readed
+
+
+Chat:
+-created_at
+-title
+-description
+-category
+
+
+User:
+-username
+-first_name
+-last_name
+-email
+-mobile
+-description
+-created_at
+
+
+Chat_User:
+-chat_id //ForeignKey(Chat)
+-user_id //ForeignKey(User)
+-admin (bool)
+
+
+Chat_Message:
+-chat_id //ForeignKey(Chat)
+-message_id //ForeignKey(Message)
+
+
+User_Message:
+-message_id //ForeignKey(Message)
+-user_id //ForeignKey(User)
+
+
+---------------3---------------
+Message:
+-text
+-pub_date
+-is_readed
+
+
+Chat:
+-created_at
+-title
+-description
+-category
+
+
+User:
+-username
+-first_name
+-last_name
+-email
+-mobile
+-description
+-created_at
+
+
+Chat_User_Message:
+-chat_id //ForeignKey(Chat)
+-user_id //ForeignKey(User)
+-message_id //ForeignKey(Message)
