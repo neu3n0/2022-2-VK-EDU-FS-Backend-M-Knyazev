@@ -50,11 +50,11 @@
 
 
 -------Chat-------
--create
+-create +
 -edit +
 -remove +
 -get_info +
--add_user
+-add_user 
 -remove_user
 -get_users_from_group_chat
 -mute
