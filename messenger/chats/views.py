@@ -1,16 +1,11 @@
-import json
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .models import Chat, ChatMember
 from users.models import User
-from messageschat.models import Message
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
 
 
-from .serializers import ChatSerializer, ChatEditSerializer, ChatMemberSerializer, ChatMemberListSerializer, ChatCreateSerializer
-
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView, ListAPIView, RetrieveUpdateAPIView
+from .serializers import ChatSerializer, ChatEditSerializer, ChatMemberSerializer, ChatMemberListSerializer, ChatCreateSerializer, ChatMemberEditSerializer
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.exceptions import ValidationError
 
 
 class ChatCreate(CreateAPIView):
@@ -26,12 +21,6 @@ class ChatCreate(CreateAPIView):
     #     )
     #     return res
 
-    # def perform_create(self, serializer):
-    #     chat = serializer.save()
-    #     if (self.request.user):
-    #         ChatMember.objects.create(
-    #             chat=chat, user=self.request.user, chat_admin=True)
-
 
 class UsersChatsList(ListAPIView):
     serializer_class = ChatMemberListSerializer
@@ -42,6 +31,18 @@ class UsersChatsList(ListAPIView):
         user_id = self.request.GET.get('user_id')
         get_object_or_404(User, id=user_id)
         return ChatMember.objects.filter(user__id=user_id)
+
+
+class ChatMemberCreate(CreateAPIView):
+    serializer_class = ChatMemberSerializer
+    queryset = ChatMember.objects.all()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        chat_id = self.request.POST.get('chat')
+        if not ChatMember.objects.filter(chat__id=chat_id).filter(user=user).exists():
+            raise ValidationError('Only chat members can add another user')
+        return super().perform_create(serializer)
 
 
 class ChatRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
@@ -58,11 +59,24 @@ class ChatRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
         return ans
 
 
-class ChatMemberCreate(CreateAPIView):
+class ChatMemberDelete(DestroyAPIView):
     serializer_class = ChatMemberSerializer
+    queryset = ChatMember.objects.all()
 
-    def get_queryset(self):
-        return ChatMember.objects.filter(pk=self.kwargs.get('chat_id'))
+    def get_object(self):
+        return get_object_or_404(ChatMember, user__id=self.kwargs.get('user_id'), chat__id=self.kwargs.get('chat_id'))
 
-    def perform_create(self, serializer):
-        serializer.save(added_by_user=self.request.user)
+    def perform_destroy(self, instance):
+        user = self.request.user
+        chat_id = self.kwargs.get('chat_id')
+        if not ChatMember.objects.filter(chat__id=chat_id).filter(user=user).exists():
+            raise ValidationError('Only chat members can remove another user')
+        return super().perform_destroy(instance)
+
+
+class ChatMembeSettings(UpdateAPIView):
+    serializer_class = ChatMemberEditSerializer
+    queryset = ChatMember.objects.all()
+
+    def get_object(self):
+        return get_object_or_404(ChatMember, user__id=self.kwargs.get('user_id'), chat__id=self.kwargs.get('chat_id'))

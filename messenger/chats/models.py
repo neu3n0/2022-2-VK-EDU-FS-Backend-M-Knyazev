@@ -76,4 +76,3 @@ class ChatMember(models.Model):
         verbose_name_plural = 'Пользователи чата'
         ordering = ['added_at']
         unique_together = ('chat', 'user')
-

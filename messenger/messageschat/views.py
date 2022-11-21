@@ -1,54 +1,33 @@
-from messageschat.models import Message
+from .models import Message
+from chats.models import ChatMember
 
-from .serializers import MessageSerializer, MessageCreateSerializer, MessageEditSerializer
+from .serializers import MessageSerializer, MessageCreateSerializer, MessageListSerializer
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
+from rest_framework.exceptions import ValidationError
 
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
+from django.db.models import Q
+
+
+def user_in_chat(chat, user):
+    return ChatMember.objects.filter(Q(user__id=user) & Q(chat__id=chat)).exists()
 
 
 class MessageCreate(CreateAPIView):
     serializer_class = MessageCreateSerializer
     queryset = Message.objects.all()
 
+    def perform_create(self, serializer):
+        if not user_in_chat(chat=self.request.POST.get('chat'),
+                            user=self.request.POST.get('author')):
+            raise ValidationError('This user is not in this chat')
+        return super().perform_create(serializer)
+
 
 class MessageRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
-
-    def get_serializer_class(self):
-        if self.request.method == 'PUT':
-            return MessageEditSerializer
-        return MessageSerializer
+    serializer_class = MessageSerializer
 
 
-# @require_GET
-# def get_messages_from_chat(request, chat_pk):
-#     get_object_or_404(Chat, pk=chat_pk)
-#     messages = Message.objects.filter(chat_id=chat_pk)
-#     if request.GET.get('user'):
-#         messages = messages.filter(author_id=request.GET['user'])
-#     messages_ar = []
-#     for mess in messages:
-#         messages_ar.append({
-#             'user': mess.author.username,
-#             'text': mess.text,
-#             'date': mess.pub_date,
-#             'readed': mess.is_readed
-#         })
-#     messages_ar = messages_ar[0:20]
-#     return JsonResponse({'messages': messages_ar})
-
-
-# def messages_list(request, user_id):
-#     author = get_object_or_404(User, id=user_id)
-#     messages = Message.objects.filter(author__id=user_id)
-#     data = MessageListSerializer(messages, many=True).data
-#     return JsonResponse({'messages': data})
-
-
-# class MessageUserList(ListAPIView):
-#     serializer_class = MessageSerializer
-#     # queryset = Message.objects.all()
-
-#     def get_queryset(self):
-#         user_id = self.kwargs['user_id']
-#         user = get_object_or_404(User, id=user_id)
-#         return Message.objects.filter(author=user)
+class MessageListList(ListAPIView):
+    serializer_class = MessageListSerializer
+    queryset = Message.objects.all()
