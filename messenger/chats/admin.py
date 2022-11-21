@@ -4,7 +4,7 @@ from .models import Chat, ChatMember
 
 @admin.register(ChatMember)
 class ChatAdmin(admin.ModelAdmin):
-    list_display = ('user', 'chat', 'added_at')
+    list_display = ('user', 'chat', 'added_at', 'chat_admin', 'muted')
     model = ChatMember
 
 
@@ -15,5 +15,5 @@ class ChatMemberInlie(admin.TabularInline):
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):
     inlines = [ChatMemberInlie]
-    list_display = ('id', 'title', 'description', 'created_at', 'chat_admin')
+    list_display = ('id', 'title', 'description', 'created_at',)
     model = Chat

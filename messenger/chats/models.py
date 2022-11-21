@@ -17,14 +17,6 @@ class Chat(models.Model):
         (BLOG, 'Blog'),
         (DIALOG, 'Correspondence 1 on 1'),
     )
-    chat_admin = models.ForeignKey(
-        User,
-        related_name='admin_chats',
-        on_delete=models.SET_NULL,
-        verbose_name='Администратор чата',
-        null=True,
-        blank=True,
-    )
     title = models.CharField(max_length=150, verbose_name='Название')
     description = models.TextField(
         verbose_name='Описание',
@@ -40,6 +32,7 @@ class Chat(models.Model):
         choices=CHAT_TYPE,
         verbose_name='Категория'
     )
+    private = models.BooleanField(default=True, verbose_name='Приватный')
 
     class Meta:
         verbose_name = 'Чат'
@@ -60,6 +53,11 @@ class ChatMember(models.Model):
         on_delete=models.CASCADE,
         verbose_name='ID пользователя',
     )
+    chat_admin = models.BooleanField(default=False, verbose_name='Админ')
+    muted = models.BooleanField(
+        default=False,
+        verbose_name='Выключены уведомления'
+    )
     added_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата добавления пользователя'
@@ -77,3 +75,5 @@ class ChatMember(models.Model):
         verbose_name = 'Пользователь чата'
         verbose_name_plural = 'Пользователи чата'
         ordering = ['added_at']
+        unique_together = ('chat', 'user')
+

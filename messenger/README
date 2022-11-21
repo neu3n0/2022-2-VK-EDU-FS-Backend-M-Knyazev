@@ -1,3 +1,98 @@
+---------------Models---------------
+    
+-------Messsage-------
+-author //ForeignKey(User)
+-chat //ForeignKey(Chat)
+-text
+-pub_date
+-is_readed
+-count_readers
+-edited
+
+
+-------Chat-------
+-created_at //Date
+-title //Char
+-description //Text
+-category //Char
+-private //Bool
+
+
+-------ChatMember-------
+-chat_id //ForeignKey(Chat)
+-user_id //ForeignKey(User)
+-chat_admin //Bool
+-muted
+-added_at //Date
+-added_by_user //ForeignKey(User)
+
+
+-------User-------
+-username
+-first_name
+-last_name
+-email
+-mobile
+-description
+
+
+
+---------------API---------------
+
+-------Message-------
+-create +
+-edit +
+-remove +
+-get_info +
+-is_readed +
+-is_edited +
+-forward
+
+
+-------Chat-------
+-create
+-edit +
+-remove +
+-get_info +
+-add_user
+-remove_user
+-get_users_from_group_chat
+-mute
+-pin
+-clear_history
+
+
+-------User-------
+-get_user_info
+-block_user
+-leave_from_chat
+
+
+-get_chat_list_for_user
+-get_messages_from_chat
+-get_messages_from_chat_from_user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Models:
 
 User(AbstractUser):

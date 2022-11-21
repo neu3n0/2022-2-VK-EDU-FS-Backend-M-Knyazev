@@ -1,95 +1,54 @@
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.http import require_GET, require_POST, require_http_methods
-from django.shortcuts import get_object_or_404
 from messageschat.models import Message
-from chats.models import Chat
-from users.models import User
+
+from .serializers import MessageSerializer, MessageCreateSerializer, MessageEditSerializer
+
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 
 
-@require_POST
-def create_message(request, user_id, chat_id):
-    author = get_object_or_404(User, pk=user_id)
-    chat = get_object_or_404(Chat, pk=chat_id)
-    if (not request.POST.get('content')):
-        return JsonResponse(
-            {
-                'error': 'no input',
-                'content': request.POST.get('content')
-            },
-            status=400
-        )
-    message = Message.objects.create(
-        chat=chat, author=author, content=request.POST['content'])
-    return JsonResponse({
-        'author_username': message.author.username,
-        'chat_title': chat.title,
-        'content': message.content,
-        'pub_date': message.pub_date,
-        'is_readed': message.is_readed,
-    })
+class MessageCreate(CreateAPIView):
+    serializer_class = MessageCreateSerializer
+    queryset = Message.objects.all()
 
 
-@require_GET
-def get_message_info(request, pk):
-    message = get_object_or_404(Message, pk=pk)
-    return JsonResponse({
-        'author_username': message.author.username,
-        'message': message.content,
-        'is_readed': message.is_readed,
-        'pub_date': message.pub_date,
-        'chat_id': message.chat.id
-    })
+class MessageRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
+    queryset = Message.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'PUT':
+            return MessageEditSerializer
+        return MessageSerializer
 
 
-@require_GET
-def get_messages_from_chat(request, chat_pk):
-    get_object_or_404(Chat, chat_pk)
-    messages = Message.objects.filter(chat_id=chat_pk)
-    if not request.GET.get('user'):
-        return JsonResponse(
-            {
-                'error': 'bad input, user_id is necessary',
-                'messages': []
-            },
-            status=400,
-        )
-    messages = messages.filter(author_id=request.GET['user'])
-    messages_ar = []
-    for mess in messages:
-        messages_ar.append({'text': mess.content,
-                           'date': mess.pub_date, 'readed': mess.is_readed})
-    return JsonResponse({'messages': messages_ar})
+# @require_GET
+# def get_messages_from_chat(request, chat_pk):
+#     get_object_or_404(Chat, pk=chat_pk)
+#     messages = Message.objects.filter(chat_id=chat_pk)
+#     if request.GET.get('user'):
+#         messages = messages.filter(author_id=request.GET['user'])
+#     messages_ar = []
+#     for mess in messages:
+#         messages_ar.append({
+#             'user': mess.author.username,
+#             'text': mess.text,
+#             'date': mess.pub_date,
+#             'readed': mess.is_readed
+#         })
+#     messages_ar = messages_ar[0:20]
+#     return JsonResponse({'messages': messages_ar})
 
 
-@require_POST
-def edit_message(request, pk):
-    message = get_object_or_404(Message, pk=pk)
-    if (request.POST.get('content')):
-        message.content = request.POST['content']
-    message.save()
-    resp = JsonResponse({
-        'id': message.id,
-        'author': message.author,
-        'content': message.content,
-    })
-    return resp
+# def messages_list(request, user_id):
+#     author = get_object_or_404(User, id=user_id)
+#     messages = Message.objects.filter(author__id=user_id)
+#     data = MessageListSerializer(messages, many=True).data
+#     return JsonResponse({'messages': data})
 
 
-@require_http_methods(["DELETE"])
-def remove_message(request, pk):
-    message = get_object_or_404(Message, pk=pk)
-    message.delete()
-    return HttpResponse()
+# class MessageUserList(ListAPIView):
+#     serializer_class = MessageSerializer
+#     # queryset = Message.objects.all()
 
-
-@require_POST
-def is_readed(request, pk):
-    message = get_object_or_404(Message, pk=pk)
-    message.is_readed = True
-    message.save()
-    resp = JsonResponse({
-        'id': message.id,
-        'content': message.content,
-        'is_readed': message.is_readed,
-    })
-    return resp
+#     def get_queryset(self):
+#         user_id = self.kwargs['user_id']
+#         user = get_object_or_404(User, id=user_id)
+#         return Message.objects.filter(author=user)

@@ -6,6 +6,16 @@ from chats.models import Chat
 from .models import User
 
 
+from rest_framework.generics import ListAPIView
+from .serializers import UserChatListSerializer
+
+
+class UserChatListView(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserChatListSerializer
+
+
+
 @require_POST
 def create_user(request):
     if (not request.POST.get('username') and not request.POST.get('mobile')):
