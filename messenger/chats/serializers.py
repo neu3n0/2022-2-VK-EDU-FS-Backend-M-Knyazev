@@ -45,7 +45,7 @@ class ChatCreateSerializer(serializers.ModelSerializer):
                     added_by_user=self.context['request'].user
                 )
         except IntegrityError:
-            raise ValidationError('u cant add creator user to member list')
+            raise ValidationError('u cant add creator to member list')
         except:
             raise ValidationError(f'user with id={member} does not exits')
         return chat
@@ -73,9 +73,14 @@ class ChatMemberListSerializer(serializers.ModelSerializer):
 
     chat = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
+    chat_id = serializers.SerializerMethodField()
+
 
     def get_chat(self, obj):
         return ChatListSerializer(obj.chat).data
+
+    def get_chat_id(self, obj):
+        return obj.chat.id
 
     def get_last_message(self, obj):
         if (Message.objects.filter(chat__id=obj.chat.id).exists()):
@@ -84,7 +89,7 @@ class ChatMemberListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatMember
-        fields = ('chat', 'muted', 'last_message',)
+        fields = ('chat_id', 'chat', 'muted', 'last_message',)
 
 
 class ChatListSerializer(serializers.ModelSerializer):

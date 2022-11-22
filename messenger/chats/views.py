@@ -1,11 +1,21 @@
 from .models import Chat, ChatMember
 from users.models import User
 from django.shortcuts import get_object_or_404
-
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 from .serializers import ChatSerializer, ChatEditSerializer, ChatMemberSerializer, ChatMemberListSerializer, ChatCreateSerializer, ChatMemberEditSerializer
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.exceptions import ValidationError
+
+
+def login(request):
+    return render(request, 'login.html')
+
+
+@login_required
+def home(request):
+    return render(request, 'home.html')
 
 
 class ChatCreate(CreateAPIView):
@@ -28,9 +38,10 @@ class UsersChatsList(ListAPIView):
 
     def get_queryset(self):
         # можно просто прокидывать self.request.user
-        user_id = self.request.GET.get('user_id')
-        get_object_or_404(User, id=user_id)
-        return ChatMember.objects.filter(user__id=user_id)
+        # user_id = self.request.GET.get('user_id')
+        # get_object_or_404(User, id=user_id)
+        return ChatMember.objects.filter(user=self.request.user)
+        # return ChatMember.objects.filter(user__id=user_id)
 
 
 class ChatMemberCreate(CreateAPIView):
@@ -52,11 +63,6 @@ class ChatRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
         if self.request.method == 'PUT':
             return ChatEditSerializer
         return ChatSerializer
-
-    def update(self, request, *args, **kwargs):
-        ans = super().update(request, *args, **kwargs)
-        print(ans)
-        return ans
 
 
 class ChatMemberDelete(DestroyAPIView):

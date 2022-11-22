@@ -11,7 +11,10 @@ class User(AbstractUser):
     )
     mobile = models.CharField(
         max_length=12,
-        unique=True,
+        null=True,
+        blank=True,
+        default=None,
+        # unique=True,
         verbose_name='Номер телефона'
     )
     description = models.TextField(

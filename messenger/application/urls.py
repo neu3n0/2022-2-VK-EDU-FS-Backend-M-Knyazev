@@ -16,11 +16,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include
+from django.contrib.auth import views as auth_views
+from chats.views import login
+from chats.views import home
 
 
 urlpatterns = [
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('chats/', include('chats.urls')),
     path('users/', include('users.urls')),
     path('messages/', include('messageschat.urls')),
+    path('login/', login, name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('social-auth/', include('social_django.urls', namespace='social')),
 ]
