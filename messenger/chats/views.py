@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from .serializers import ChatSerializer, ChatEditSerializer, ChatMemberSerializer, ChatMemberListSerializer, ChatCreateSerializer, ChatMemberEditSerializer
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.exceptions import ValidationError
+from utils.utils import user_in_chat
 
 
 def login(request):
@@ -37,11 +38,7 @@ class UsersChatsList(ListAPIView):
     queryset = ChatMember.objects.all()
 
     def get_queryset(self):
-        # можно просто прокидывать self.request.user
-        # user_id = self.request.GET.get('user_id')
-        # get_object_or_404(User, id=user_id)
         return ChatMember.objects.filter(user=self.request.user)
-        # return ChatMember.objects.filter(user__id=user_id)
 
 
 class ChatMemberCreate(CreateAPIView):
@@ -51,13 +48,19 @@ class ChatMemberCreate(CreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         chat_id = self.request.POST.get('chat')
-        if not ChatMember.objects.filter(chat__id=chat_id).filter(user=user).exists():
+        if not ChatMember.objects.filter(chat_id=chat_id).filter(user=user).exists():
             raise ValidationError('Only chat members can add another user')
         return super().perform_create(serializer)
 
 
 class ChatRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     queryset = Chat.objects.all()
+
+    def get_object(self):
+        chat = get_object_or_404(Chat, pk=self.kwargs.get('pk'))
+        if not user_in_chat(chat.id, self.request.user.id):
+            raise ValidationError('This user is not in this chat')
+        return super().get_object()
 
     def get_serializer_class(self):
         if self.request.method == 'PUT':
@@ -70,12 +73,10 @@ class ChatMemberDelete(DestroyAPIView):
     queryset = ChatMember.objects.all()
 
     def get_object(self):
-        return get_object_or_404(ChatMember, user__id=self.kwargs.get('user_id'), chat__id=self.kwargs.get('chat_id'))
+        return get_object_or_404(ChatMember, user_id=self.kwargs.get('user_id'), chat_id=self.kwargs.get('chat_id'))
 
     def perform_destroy(self, instance):
-        user = self.request.user
-        chat_id = self.kwargs.get('chat_id')
-        if not ChatMember.objects.filter(chat__id=chat_id).filter(user=user).exists():
+        if not user_in_chat(self.kwargs.get('chat_id'), self.request.user.id):
             raise ValidationError('Only chat members can remove another user')
         return super().perform_destroy(instance)
 
@@ -85,4 +86,4 @@ class ChatMembeSettings(UpdateAPIView):
     queryset = ChatMember.objects.all()
 
     def get_object(self):
-        return get_object_or_404(ChatMember, user__id=self.kwargs.get('user_id'), chat__id=self.kwargs.get('chat_id'))
+        return get_object_or_404(ChatMember, user_id=self.kwargs.get('user_id'), chat_id=self.kwargs.get('chat_id'))

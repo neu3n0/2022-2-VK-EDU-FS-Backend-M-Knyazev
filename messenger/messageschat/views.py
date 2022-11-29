@@ -1,15 +1,12 @@
 from .models import Message
-from chats.models import ChatMember
+from chats.models import ChatMember, Chat
 
 from .serializers import MessageSerializer, MessageCreateSerializer, MessageListSerializer
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
-from django.db.models import Q
-
-
-def user_in_chat(chat, user):
-    return ChatMember.objects.filter(Q(user__id=user) & Q(chat__id=chat)).exists()
+from utils.utils import user_in_chat
 
 
 class MessageCreate(CreateAPIView):
@@ -17,8 +14,10 @@ class MessageCreate(CreateAPIView):
     queryset = Message.objects.all()
 
     def perform_create(self, serializer):
+        if self.request.user.id != int(self.request.POST.get('author')):
+            raise ValidationError('current user != message user')
         if not user_in_chat(chat=self.request.POST.get('chat'),
-                            user=self.request.POST.get('author')):
+                            user=self.request.user.id):
             raise ValidationError('This user is not in this chat')
         return super().perform_create(serializer)
 
@@ -27,7 +26,14 @@ class MessageRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
 
+    def get_object(self):
+        mess = get_object_or_404(Message, pk=self.kwargs.get('pk'))
+        chat = mess.chat
+        if not user_in_chat(chat.id, self.request.user.id):
+            raise ValidationError('This user is not in this chat')
+        return super().get_object()
 
-class MessageListList(ListAPIView):
+
+class MessageList(ListAPIView):
     serializer_class = MessageListSerializer
     queryset = Message.objects.all()

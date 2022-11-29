@@ -84,6 +84,11 @@ LOGIN_REDIRECT_URL = 'home'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'login'
 
+LOGIN_EXEMPT_URLS = (
+    '/login/',
+    '/admin/',
+    '/social-auth/',
+)
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

@@ -3,7 +3,7 @@ from .models import Chat, ChatMember
 from messageschat.models import Message
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from messageschat.serializers import LastMessageSerializer
+from messageschat.serializers import LastMessageSerializer, MessageSerializer
 from django.db import transaction, IntegrityError
 from users.models import User
 from rest_framework.exceptions import ValidationError
@@ -14,8 +14,8 @@ class ChatCreateSerializer(serializers.ModelSerializer):
 
     new_members = serializers.ListField(write_only=True, required=False)
 
-    members = serializers.SerializerMethodField()
-    admins = serializers.SerializerMethodField()
+    members = serializers.ListField(source='get_members', read_only=True)
+    admins = serializers.ListField(source='get_admins', read_only=True)
 
     # @transaction.atomic
     # def create(self, validated_data):
@@ -62,41 +62,28 @@ class ChatCreateSerializer(serializers.ModelSerializer):
             'admins'
         )
 
-    def get_members(self, obj):
-        return ChatMember.objects.filter(chat__id=obj.pk).values_list('user__username', flat=True)
-
-    def get_admins(self, obj):
-        return ChatMember.objects.filter(Q(chat__id=obj.pk) & Q(chat_admin=True)).values_list('user__username', flat=True)
-
-
-class ChatMemberListSerializer(serializers.ModelSerializer):
-
-    chat = serializers.SerializerMethodField()
-    last_message = serializers.SerializerMethodField()
-    chat_id = serializers.SerializerMethodField()
-
-
-    def get_chat(self, obj):
-        return ChatListSerializer(obj.chat).data
-
-    def get_chat_id(self, obj):
-        return obj.chat.id
-
-    def get_last_message(self, obj):
-        if (Message.objects.filter(chat__id=obj.chat.id).exists()):
-            return LastMessageSerializer(Message.objects.filter(chat__id=obj.chat.id).first()).data
-        return None
-
-    class Meta:
-        model = ChatMember
-        fields = ('chat_id', 'chat', 'muted', 'last_message',)
-
 
 class ChatListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('title', 'category')
+        fields = ('id', 'title', 'category')
+
+
+class ChatMemberListSerializer(serializers.ModelSerializer):
+
+    chat = ChatListSerializer()
+    last_message = serializers.SerializerMethodField()
+
+    def get_last_message(self, obj):
+        l_message = Message.objects.filter(chat_id=obj.chat.id).first()
+        if (l_message):
+            return LastMessageSerializer(l_message).data
+        return None
+
+    class Meta:
+        model = ChatMember
+        fields = ('chat', 'muted', 'last_message',)
 
 
 class ChatMemberSerializer(serializers.ModelSerializer):
@@ -109,18 +96,16 @@ class ChatMemberSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     """Serializer for chat"""
 
-    members = serializers.SerializerMethodField()
-    admins = serializers.SerializerMethodField()
+    members = serializers.ListField(source='get_members')
+    admins = serializers.ListField(source='get_admins')
+    messages = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
         fields = '__all__'
 
-    def get_members(self, obj):
-        return ChatMember.objects.filter(chat__id=obj.pk).values_list('user__username', flat=True)
-
-    def get_admins(self, obj):
-        return ChatMember.objects.filter(Q(chat__id=obj.pk) & Q(chat_admin=True)).values_list('user__username', flat=True)
+    def get_messages(self, obj):
+        return MessageSerializer(obj.chat_messages, many=True).data
 
 
 class ChatEditSerializer(serializers.ModelSerializer):

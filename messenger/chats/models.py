@@ -34,6 +34,12 @@ class Chat(models.Model):
     )
     private = models.BooleanField(default=True, verbose_name='Приватный')
 
+    def get_members(self):
+        return self.chat_members.all().values_list('user__username', flat=True)
+
+    def get_admins(self):
+        return self.chat_members.filter(chat_admin=True).values_list('user__username', flat=True)
+
     class Meta:
         verbose_name = 'Чат'
         verbose_name_plural = 'Чаты'
