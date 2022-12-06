@@ -9,6 +9,10 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView,
 from rest_framework.exceptions import ValidationError
 from utils.utils import user_in_chat
 
+from django.http import JsonResponse
+import json
+import requests
+
 
 def login(request):
     return render(request, 'login.html')
@@ -22,15 +26,6 @@ def home(request):
 class ChatCreate(CreateAPIView):
     serializer_class = ChatCreateSerializer
     queryset = Chat.objects.all()
-
-    # def create(self, request, *args, **kwargs):
-    #     res = super().create(request, *args, **kwargs)
-    #     ChatMember.objects.create(
-    #         chat=Chat.objects.get(id=res.data.get('id')),
-    #         user=self.request.user,
-    #         chat_admin=True
-    #     )
-    #     return res
 
 
 class UsersChatsList(ListAPIView):

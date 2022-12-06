@@ -32,8 +32,17 @@ class User(AbstractUser):
 
 
 class Contactbook(models.Model):
-    owner = models.OneToOneField(User, verbose_name='Владелец', related_name='contactbook', on_delete=models.CASCADE)
-    contacts = models.ManyToManyField(User, verbose_name='Контакты', related_name='bookcontacts')
+    owner = models.OneToOneField(
+        User,
+        verbose_name='Владелец',
+        related_name='contactbook',
+        on_delete=models.CASCADE
+    )
+    contacts = models.ManyToManyField(
+        User,
+        verbose_name='Контакты',
+        related_name='bookcontacts'
+    )
 
     class Meta:
         verbose_name = 'Контактная книга'
