@@ -89,6 +89,8 @@ class TicTacGame:
                 playerName = input(f"Enter the name of the {name} player: ")
             if playerName == self.robotName:
                 print("This name is used by the computer, choose another :)")
+            elif playerName == '':
+                print("emptyname :)")
             else:
                 break
 
