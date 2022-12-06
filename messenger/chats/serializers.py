@@ -8,6 +8,8 @@ from django.db import transaction, IntegrityError
 from users.models import User
 from rest_framework.exceptions import ValidationError
 
+from .tasks import send_admin_email, create_chat_ws
+
 
 class ChatCreateSerializer(serializers.ModelSerializer):
     """Serializer for chat"""
@@ -17,16 +19,6 @@ class ChatCreateSerializer(serializers.ModelSerializer):
     members = serializers.ListField(source='get_members', read_only=True)
     admins = serializers.ListField(source='get_admins', read_only=True)
 
-    # @transaction.atomic
-    # def create(self, validated_data):
-    #     # print('create', validated_data)
-    #     # validated_data.pop('memberst', None)
-    #     chat = super().create(validated_data)
-    #     # ChatMember.objects.create(
-    #     #     chat=chat, user=self.context['request'].user, chat_admin=True)
-    #     # print('create', chat)
-    #     return chat
-
     @transaction.atomic
     def save(self, **kwargs):
         members = self.validated_data.pop('new_members', {})
@@ -35,6 +27,17 @@ class ChatCreateSerializer(serializers.ModelSerializer):
             chat=chat,
             user=self.context['request'].user,
             chat_admin=True
+        )
+        create_chat_ws.delay(
+            {
+                "chat": {
+                    "id": chat.id,
+                    "title": chat.title,
+                    "category": chat.title,
+                },
+                "muted": 'false',
+                "last_message": None,
+            }
         )
         try:
             for member in members:
@@ -67,7 +70,7 @@ class ChatListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('id', 'title', 'category')
+        fields = ('id', 'title', 'category', 'created_at')
 
 
 class ChatMemberListSerializer(serializers.ModelSerializer):
@@ -87,6 +90,14 @@ class ChatMemberListSerializer(serializers.ModelSerializer):
 
 
 class ChatMemberSerializer(serializers.ModelSerializer):
+
+    def save(self, **kwargs):
+        chatmember = super().save(**kwargs)
+        print(self.context['request'].user.id, self.context['request'].user.username,
+              chatmember.chat.id, chatmember.chat.title)
+        send_admin_email.delay(
+            self.context['request'].user.id, self.context['request'].user.username, chatmember.chat.id, chatmember.chat.title)
+        return chatmember
 
     class Meta:
         model = ChatMember

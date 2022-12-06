@@ -1,10 +1,28 @@
 from rest_framework import serializers
 
 from .models import Message
+from .tasks import create_mess_ws
 
 
 class MessageCreateSerializer(serializers.ModelSerializer):
     """Serializer for create message"""
+
+    def save(self, **kwargs):
+        mess = super().save(**kwargs)
+        create_mess_ws.delay(
+            {
+                "id": mess.id,
+                "author_username": mess.author.username,
+                "author_id": mess.author.id,
+                "chat_title": "chatOne",
+                "text": mess.text,
+                "pub_date": mess.pub_date,
+                "is_readed": mess.is_readed,
+                "count_readers": mess.count_readers,
+                "edited": mess.edited
+            }
+        )
+        return mess
 
     class Meta:
         model = Message
