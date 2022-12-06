@@ -96,7 +96,7 @@ LOGIN_EXEMPT_URLS = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'messenger_db',
+        'NAME': 'chat_db',
         'HOST': '127.0.0.1',
         'PORT': 5432,
     }
