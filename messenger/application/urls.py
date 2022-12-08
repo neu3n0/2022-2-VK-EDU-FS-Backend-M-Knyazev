@@ -19,6 +19,7 @@ from django.conf.urls import include
 from django.contrib.auth import views as auth_views
 from chats.views import login
 from chats.views import home
+from messageschat.views import test
 
 
 urlpatterns = [
@@ -27,6 +28,7 @@ urlpatterns = [
     path('chats/', include('chats.urls')),
     path('users/', include('users.urls')),
     path('messages/', include('messageschat.urls')),
+    path('api/todo/', test),
     path('login/', login, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('social-auth/', include('social_django.urls', namespace='social')),

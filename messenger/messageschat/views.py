@@ -8,6 +8,12 @@ from django.shortcuts import get_object_or_404
 
 from utils.utils import user_in_chat
 
+from django.http import JsonResponse
+
+def test(request):
+    print(request.user ,request.method, request.body, request.POST.get('text'), request)
+    return JsonResponse({'1': 'a'})
+
 
 class MessageCreate(CreateAPIView):
     serializer_class = MessageCreateSerializer
