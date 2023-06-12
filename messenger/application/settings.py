@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'users',
     'messageschat',
     'rest_framework',
+    'rest_framework.authtoken',
     'social_django',
 ]
 
@@ -80,9 +81,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'http://localhost:3000#/chats'
 LOGOUT_URL = 'logout'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'http://localhost:3000'
 
 LOGIN_EXEMPT_URLS = (
     '/login/',

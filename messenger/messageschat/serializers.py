@@ -43,7 +43,8 @@ class MessageCreateSerializer(serializers.ModelSerializer):
                 "is_readed": mess.is_readed,
                 "count_readers": mess.count_readers,
                 "edited": mess.edited
-            }
+            },
+            f"messages{mess.chat.id}"
         )
         return mess
 
@@ -56,6 +57,21 @@ class MessageCreateSerializer(serializers.ModelSerializer):
             'text',
             'pub_date',
         )
+
+
+
+class TestCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Message
+        fields = (
+            'id',
+            'author',
+            'chat',
+            'text',
+            'pub_date',
+        )
+
 
 
 class MessageSerializer(serializers.ModelSerializer):
